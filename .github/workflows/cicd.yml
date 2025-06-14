@@ -62,4 +62,19 @@ jobs:
           echo "PG_HOST: ${{ env.PG_HOST }}"
           echo "PG_PORT: ${{ env.PG_PORT }}"
 
+  deploy:
+    runs-on: ubuntu-latest
+    needs: testing
+    steps:
+      - name: Деплой
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PG_HOST2 }}
+          username: ubuntu
+          password: Serebro11!!
+          script: |
+            cd /home/ubuntu/dj-prj
+            git pull
+            sudo systemctl restart gunicorn
+            
 

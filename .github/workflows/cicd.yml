@@ -73,9 +73,9 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu/dj-prj
+            cd /home/ubuntu/dj-prj/Django_2.2_m2m
             git pull
             sudo systemctl restart gunicorn
-            debug: true
+          debug: true
             
 

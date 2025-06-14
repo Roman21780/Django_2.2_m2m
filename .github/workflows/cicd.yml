@@ -1,0 +1,26 @@
+name: CI/CD action
+
+on:
+  push:
+    branches:
+      - [main]
+
+jobs:
+  testing:
+    runs-on:
+      ubuntu-latest
+    steps:
+      - name: Проверить изменения
+        uses: actions/checkout@v2
+
+      - name: Установка python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+
+      - name: Установка зависимостей
+        run: pip install -r requirements.txt
+
+      - name: Линтер
+        run: flake8 webpython --exclude migrations --ignore E501,F401,E302,W293,W391,W292
+

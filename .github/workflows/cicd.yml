@@ -54,5 +54,12 @@ jobs:
           PG_PASSWORD: ${{ env.PG_PASSWORD }}
           PG_HOST: ${{ env.PG_HOST }}
           PG_PORT: ${{ env.PG_PORT }}
+      - name: Check environment variables
+        run: |
+          echo "PG_NAME: ${{ env.PG_NAME }}"
+          echo "PG_USER: ${{ env.PG_USER }}"
+          echo "PG_PASSWORD: ${{ env.PG_PASSWORD }}"
+          echo "PG_HOST: ${{ env.PG_HOST }}"
+          echo "PG_PORT: ${{ env.PG_PORT }}"
 
 

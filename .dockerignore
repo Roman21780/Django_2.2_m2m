@@ -1,0 +1,9 @@
+*.json
+*.md
+test
+.git
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd

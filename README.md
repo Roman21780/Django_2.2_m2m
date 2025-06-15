@@ -127,3 +127,11 @@ python manage.py loaddata articles.json
 ```bash
 python manage.py runserver
 ```
+
+###Docker
+# Соберите новый образ с тегом 0.2
+docker build -t my_m2m_app:0.2 .
+
+# Запустите новый контейнер
+docker run -d -p 8000:8000 --name django_app my_m2m_app:0.2
+docker run -d --name django_app -p 8000:8000 my_m2m_app:0.3

@@ -1,29 +1,25 @@
-version: '3.8'
+version: "3.9"
 
 services:
   backend:
-    build: .
+    build:
+      context: .
     container_name: stocks_backend
     command: >
       sh -c "python manage.py collectstatic --noinput &&
              python manage.py migrate &&
-             gunicorn --bind 0.0.0.0:8000 --workers 3 website.wsgi:application"
+             gunicorn --bind 0.0.0.0:8000 --workers 4 --access-logfile - --error-logfile - website.wsgi:application"
     volumes:
       - ./:/app
-      - static_volume:/app/staticfiles  # Важно для Nginx
-      - media_volume:/app/media         # Если используете загрузку файлов
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/health/" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     networks:
       - backend_network
 
@@ -32,12 +28,18 @@ services:
     container_name: stocks_postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
     env_file:
       - .env
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    command: >
+      sh -c "apk add --no-cache musl-locales && docker-entrypoint.sh postgres"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -53,8 +55,8 @@ services:
       - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-      - static_volume:/app/staticfiles  # Должно совпадать с backend
-      - media_volume:/app/media         # Если используете загрузку файлов
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
     depends_on:
       - backend
     networks:
@@ -62,13 +64,14 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
+    container_name: stocks_pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
       - "5050:80"
     volumes:
-      - pgadmin_data:/var/lib/pgadmin  # Сохраняет данные между перезапусками
+      - pgadmin_data:/var/lib/pgadmin
     networks:
       - backend_network
     depends_on:

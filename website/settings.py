@@ -88,8 +88,8 @@ DATABASES = {
         'HOST': 'postgres',
         'PORT': os.getenv('DB_PORT', '5432'),
         'OPTIONS': {
-            'client_encoding': 'UTF8',
-        },
+            'connect_timeout': 5,  # Таймаут подключения 5 сек
+        }
     }
 }
 

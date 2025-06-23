@@ -6,7 +6,12 @@ RUN apt-get update && apt-get install -y \
     gcc \
     python3-dev \
     libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+    postgresql-client \
+    locales \
+    && rm -rf /var/lib/apt/lists/* \
+    && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen \
+    && locale-gen en_US.UTF-8 \
+    && update-locale LANG=en_US.UTF-8
 
 # Создаем и переходим в рабочую директорию
 WORKDIR /app
@@ -27,4 +32,4 @@ RUN python manage.py collectstatic --noinput
 EXPOSE 8000
 
 # Запускаем Gunicorn (production) будет переопределена в compose при необходимости
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "website.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "website.wsgi:application"]

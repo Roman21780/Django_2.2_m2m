@@ -3,10 +3,9 @@ FROM python:3.13-slim
 
 # Устанавливаем зависимости для Postgres и других системных библиотек
 RUN apt-get update && apt-get install -y \
-    curl \
-    postgresql-client \
-    libpq-dev \
     gcc \
+    python3-dev \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Создаем и переходим в рабочую директорию
@@ -27,5 +26,5 @@ RUN python manage.py collectstatic --noinput
 # Указываем порт, который будет использоваться
 EXPOSE 8000
 
-# Запускаем Gunicorn (production)
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--access-logfile", "-", "website.wsgi"]
+# Запускаем Gunicorn (production) будет переопределена в compose при необходимости
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "website.wsgi:application"]

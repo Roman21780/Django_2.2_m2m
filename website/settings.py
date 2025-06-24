@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 from dotenv import load_dotenv
 import os
+import socket
 
 load_dotenv()  # Загружает переменные из .env
 
@@ -23,7 +24,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+# DEBUG = os.getenv('DEBUG', 'False') == 'True'
+DEBUG = True
 
 #ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 ALLOWED_HOSTS = ['*']  # Для теста разрешите все хосты
@@ -77,6 +79,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'website.wsgi.application'
 
+IS_DOCKER = os.environ.get('DOCKER') == 'true'
+
+DB_HOST = 'host.docker.internal' if IS_DOCKER else 'localhost'
 
 DATABASES = {
     'default': {
@@ -85,7 +90,7 @@ DATABASES = {
         'USER': os.getenv('DB_USER', 'postgres'),
         'PASSWORD': os.getenv('DB_PASSWORD', 'Serebro11!!'),
         # 'HOST': 'host.docker.internal',
-        'HOST': 'postgres',
+        'HOST': DB_HOST,
         'PORT': os.getenv('DB_PORT', '5432'),
         'OPTIONS': {
             'connect_timeout': 5,  # Таймаут подключения 5 сек
@@ -93,11 +98,11 @@ DATABASES = {
     }
 }
 
-print("DB_NAME:", os.getenv('DB_NAME'))
-print("DB_USER:", os.getenv('DB_USER'))
-print("DB_PASSWORD:", os.getenv('DB_PASSWORD'))
-print("DB_HOST:", os.getenv('DB_HOST'))
-print("DB_PORT:", os.getenv('DB_PORT'))
+# print("DB_NAME:", os.getenv('DB_NAME'))
+# print("DB_USER:", os.getenv('DB_USER'))
+# print("DB_PASSWORD:", os.getenv('DB_PASSWORD'))
+# print("DB_HOST:", os.getenv('DB_HOST'))
+# print("DB_PORT:", os.getenv('DB_PORT'))
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators

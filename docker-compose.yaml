@@ -1,12 +1,11 @@
-version: "3.9"
-
 services:
   backend:
     build:
       context: .
     container_name: stocks_backend
     command: >
-      sh -c "python manage.py collectstatic --noinput &&
+      sh -c "until pg_isready -h postgres -U ${POSTGRES_USER}; do echo waiting for database; sleep 2; done &&
+             python manage.py collectstatic --noinput &&
              python manage.py migrate &&
              gunicorn --bind 0.0.0.0:8000 --workers 4 --access-logfile - --error-logfile - website.wsgi:application"
     volumes:
@@ -16,37 +15,43 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - DOCKER=true
+      - DB_HOST=postgres
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     depends_on:
       postgres:
-        condition: service_healthy
+        condition: service_started
     networks:
       - backend_network
+    restart: unless-stopped
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15
     container_name: stocks_postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d
-    env_file:
-      - .env
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
-      LANG: en_US.UTF-8
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
       LC_ALL: en_US.UTF-8
+      LANG: en_US.UTF-8
     command: >
-      sh -c "apk add --no-cache musl-locales && docker-entrypoint.sh postgres"
+      sh -c "locale-gen en_US.UTF-8 &&
+             update-locale LANG=en_US.UTF-8 &&
+             exec docker-entrypoint.sh postgres"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} || exit 0" ]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 30
+    ports:
+      - "5432:5432"
     networks:
       - backend_network
+    restart: unless-stopped
 
   nginx:
     image: nginx:1.25-alpine
@@ -61,6 +66,7 @@ services:
       - backend
     networks:
       - backend_network
+    restart: unless-stopped
 
   pgadmin:
     image: dpage/pgadmin4
@@ -76,6 +82,7 @@ services:
       - backend_network
     depends_on:
       - postgres
+    restart: unless-stopped
 
 networks:
   backend_network:
